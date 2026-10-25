@@ -28,13 +28,13 @@ ClipStash is free and not code signed yet, so your computer shows a warning the 
 
 ### Windows
 
-1. Download `ClipStash-x.y.z-Windows-Setup.exe` and open it.
+1. Download [`ClipStash-Windows-Setup.exe`](https://github.com/itsazaira/clipstash/releases/latest/download/ClipStash-Windows-Setup.exe) and open it.
 2. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
 3. ClipStash starts in the system tray (bottom right, you may need to click the ^ arrow).
 
 ### Mac (Intel and Apple silicon)
 
-1. Download `ClipStash-x.y.z-Mac-Universal.dmg`, open it and drag **ClipStash** into **Applications**.
+1. Download [`ClipStash-Mac-Universal.dmg`](https://github.com/itsazaira/clipstash/releases/latest/download/ClipStash-Mac-Universal.dmg), open it and drag **ClipStash** into **Applications**.
 2. The first time, **right click** ClipStash in Applications and choose **Open**, then **Open** again.
    On macOS 15 (Sequoia) or later, if it is still blocked: open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
 3. ClipStash appears in the menu bar at the top of the screen.
