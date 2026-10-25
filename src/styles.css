@@ -164,16 +164,52 @@ kbd {
 .muted { color: var(--muted) !important; font-size: 12px; }
 .warn { color: var(--gold) !important; font-size: 12px; }
 
-/* About window */
-.about-body { user-select: text; }
-.about {
-  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 28px 24px; text-align: center;
+/* Drag the window by its header; clicks on the logo fall through to the header. */
+.popup-header { cursor: default; }
+.brand svg { pointer-events: none; }
+
+/* History size picker */
+.segmented { display: flex; flex-shrink: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.segmented button {
+  background: none; border: none; padding: 5px 9px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums;
 }
-.about h1 { margin: 14px 0 4px; font-size: 24px; letter-spacing: 0.01em; }
-.tagline { margin: 0; color: var(--text); font-size: 14px; }
-.version { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
-.maker { margin: 22px 0 18px; padding-top: 18px; border-top: 1px solid var(--border); width: 100%; }
+.segmented button + button { border-left: 1px solid var(--border); }
+.segmented button:hover { color: var(--text); background: var(--surface-2); }
+.segmented button.on { background: var(--gold); color: var(--on-gold); font-weight: 650; }
+
+/* Support line under the footer */
+.support-bar {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 6px 12px 8px; color: var(--muted); font-size: 12px;
+}
+.support-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1px solid var(--border); border-radius: 999px;
+  padding: 3px 10px; color: var(--gold); font-size: 12px; font-weight: 600;
+}
+.support-btn:hover { border-color: var(--gold); }
+.text-link { background: none; border: none; padding: 3px 4px; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
+.text-link:hover { color: var(--text); }
+
+/* "Copied" message */
+.toast {
+  position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%);
+  max-width: calc(100% - 32px); padding: 8px 14px; border-radius: 9px;
+  background: var(--gold); color: var(--on-gold); font-size: 12.5px; font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); white-space: nowrap;
+}
+
+/* About page inside the popup */
+.back-btn {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; padding: 4px 8px 4px 2px; border-radius: 6px; color: var(--muted);
+}
+.back-btn:hover { color: var(--text); }
+.about-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; user-select: text; }
+.about h1 { margin: 10px 0 2px; font-size: 22px; letter-spacing: 0.01em; }
+.tagline { margin: 0; color: var(--text); font-size: 13.5px; }
+.version { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.maker { margin: 16px 0 14px; padding-top: 14px; border-top: 1px solid var(--border); width: 100%; }
 .maker-name { color: var(--gold); font-weight: 600; }
 .maker-tagline { color: var(--muted); font-size: 12px; margin-top: 2px; font-style: italic; }
 .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
@@ -182,4 +218,4 @@ kbd {
   padding: 5px 12px; font-size: 12.5px;
 }
 .link:hover { border-color: var(--gold); color: var(--gold); }
-.licence { margin: 22px 0 0; color: var(--muted); font-size: 12px; }
+.licence { margin: 16px 0 0; color: var(--muted); font-size: 12px; }

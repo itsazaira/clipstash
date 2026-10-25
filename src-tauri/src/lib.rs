@@ -6,19 +6,25 @@ mod paste;
 mod store;
 mod watcher;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use store::{Snapshot, Store};
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, RunEvent, State, WebviewUrl, WebviewWindowBuilder, WindowEvent, Wry};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, State, WindowEvent, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_opener::OpenerExt;
 
 const POPUP: &str = "popup";
-const ABOUT: &str = "about";
 
-/// The only URLs the app will ever open, all from the About window.
+/// True when the popup was opened with the shortcut, so a pick pastes into the app the user was in.
+/// Opened from the tray, taskbar or a second launch, there is no such app and a pick only copies.
+static PASTE_TARGET: AtomicBool = AtomicBool::new(false);
+/// The popup is centred the first time only, so it stays wherever the user drags it.
+static POSITIONED: AtomicBool = AtomicBool::new(false);
+
+/// The only URLs the app will ever open, all from the About page.
 const LINKS: &[&str] = &[
     "https://itsazaira.com",
     "https://github.com/itsazaira/clipstash",
@@ -38,12 +44,17 @@ pub fn emit_state(app: &AppHandle) {
     let _ = app.emit("state-changed", snapshot);
 }
 
-fn show_popup(app: &AppHandle) {
+fn show_popup(app: &AppHandle, from_shortcut: bool) {
     let Some(window) = app.get_webview_window(POPUP) else { return };
-    paste::remember_foreground();
+    if from_shortcut {
+        paste::remember_foreground();
+    }
+    PASTE_TARGET.store(from_shortcut, Ordering::SeqCst);
     #[cfg(target_os = "macos")]
     let _ = app.show();
-    let _ = window.center();
+    if !POSITIONED.swap(true, Ordering::SeqCst) {
+        let _ = window.center();
+    }
     let _ = window.show();
     let _ = window.set_focus();
     let _ = window.emit("popup-shown", ());
@@ -55,7 +66,7 @@ fn hide_popup_window(app: &AppHandle) {
     }
 }
 
-fn toggle_popup(app: &AppHandle) {
+fn toggle_popup(app: &AppHandle, from_shortcut: bool) {
     let visible = app
         .get_webview_window(POPUP)
         .and_then(|w| w.is_visible().ok())
@@ -63,7 +74,7 @@ fn toggle_popup(app: &AppHandle) {
     if visible {
         hide_popup_window(app);
     } else {
-        show_popup(app);
+        show_popup(app, from_shortcut);
     }
 }
 
@@ -104,7 +115,7 @@ fn build_tray(app: &AppHandle, paused: bool) -> tauri::Result<()> {
         .menu(&menu)
         .show_menu_on_left_click(cfg!(target_os = "macos"))
         .on_menu_event(|app, event| match event.id.as_ref() {
-            "open" => show_popup(app),
+            "open" => show_popup(app, false),
             "pause" => {
                 let paused = !app.state::<AppState>().store.lock().unwrap().data.paused;
                 apply_paused(app, paused);
@@ -114,7 +125,7 @@ fn build_tray(app: &AppHandle, paused: bool) -> tauri::Result<()> {
         })
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
-                show_popup(tray.app_handle());
+                show_popup(tray.app_handle(), false);
             }
         })
         .build(app)?;
@@ -126,7 +137,8 @@ fn get_state(state: State<AppState>) -> Snapshot {
     state.store.lock().unwrap().snapshot()
 }
 
-/// Copies the item back to the clipboard, hides the popup and pastes into the previous app.
+/// Copies the item back to the clipboard. When the popup was opened with the shortcut it also hides
+/// the popup and pastes into the previous app ("pasted"); otherwise it only copies ("copied").
 /// Returns "needs-permission" on macOS when Accessibility access is missing (the item is still copied).
 #[tauri::command]
 fn paste_item(app: AppHandle, state: State<AppState>, id: u64) -> Result<&'static str, String> {
@@ -142,6 +154,9 @@ fn paste_item(app: AppHandle, state: State<AppState>, id: u64) -> Result<&'stati
         .map_err(|e| e.to_string())?;
     emit_state(&app);
 
+    if !PASTE_TARGET.load(Ordering::SeqCst) {
+        return Ok("copied");
+    }
     if !paste::has_permission() {
         return Ok("needs-permission");
     }
@@ -170,6 +185,15 @@ fn clear_all(app: AppHandle, state: State<AppState>) {
 }
 
 #[tauri::command]
+fn set_max_items(app: AppHandle, state: State<AppState>, max: usize) -> Result<(), String> {
+    if !state.store.lock().unwrap().set_max_items(max) {
+        return Err("Unsupported history size".into());
+    }
+    emit_state(&app);
+    Ok(())
+}
+
+#[tauri::command]
 fn get_autostart(app: AppHandle) -> bool {
     app.autolaunch().is_enabled().unwrap_or(false)
 }
@@ -184,30 +208,6 @@ fn set_autostart(app: AppHandle, enabled: bool) -> Result<(), String> {
 #[tauri::command]
 fn hide_popup(app: AppHandle) {
     hide_popup_window(&app);
-}
-
-/// Async so creating a window does not deadlock on Windows.
-#[tauri::command]
-async fn open_about(app: AppHandle) -> Result<(), String> {
-    hide_popup_window(&app);
-    #[cfg(target_os = "macos")]
-    let _ = app.show();
-    if let Some(window) = app.get_webview_window(ABOUT) {
-        let _ = window.show();
-        let _ = window.set_focus();
-        return Ok(());
-    }
-    WebviewWindowBuilder::new(&app, ABOUT, WebviewUrl::App("index.html#about".into()))
-        .title("About ClipStash")
-        .inner_size(380.0, 520.0)
-        .resizable(false)
-        .maximizable(false)
-        .minimizable(false)
-        .center()
-        .focused(true)
-        .build()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -232,14 +232,14 @@ fn request_accessibility() {
 pub fn run() {
     let app = tauri::Builder::default()
         // Launching ClipStash again just opens the popup of the running copy.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_popup(app)))
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_popup(app, false)))
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
                     if event.state() == ShortcutState::Pressed {
-                        toggle_popup(app);
+                        toggle_popup(app, true);
                     }
                 })
                 .build(),
@@ -297,7 +297,7 @@ pub fn run() {
             get_autostart,
             set_autostart,
             hide_popup,
-            open_about,
+            set_max_items,
             open_link,
             has_accessibility,
             request_accessibility,
@@ -306,7 +306,7 @@ pub fn run() {
         .expect("error while building ClipStash");
 
     app.run(|_app, event| {
-        // Closing the About window must not quit a tray app. Only Quit does.
+        // Closing windows must not quit a tray app. Only Quit does.
         if let RunEvent::ExitRequested { api, code, .. } = event {
             if code.is_none() {
                 api.prevent_exit();

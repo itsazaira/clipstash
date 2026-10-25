@@ -42,13 +42,14 @@ ClipStash is free and not code signed yet, so your computer shows a warning the 
 
 ## Features
 
-- Saves new copied text automatically, newest first, up to 50 items, with no repeated copies back to back
+- Saves new copied text automatically, newest first, with no repeated copies back to back
+- Choose how many copies to keep: 10, 20, 50 or 100 (50 by default)
 - One global shortcut to open and close: **Ctrl Shift V** on Windows, **Cmd Shift V** on Mac
 - Search box on top, each item shows its first 2 lines and when you copied it
-- Click an item (or use the arrow keys and Enter) and it pastes into the app you were just using
-- Pin an item so it is kept beyond the 50 limit, unpin any time
+- Click an item (or use the arrow keys and Enter) and it pastes into the app you were just using. Opened from the tray or taskbar, a click copies the item so you can paste it anywhere
+- Pin an item so it is always kept, unpin any time
 - Pause recording, and Clear all (pinned items are kept)
-- Lives in the system tray or menu bar, with Open, Pause and Quit
+- Lives in the system tray or menu bar, with Open, Pause and Quit. Shows on the taskbar while open, and you can drag it anywhere
 - Starts automatically when your computer starts (on by default, change it in Settings)
 - Skips copies that apps like password managers mark as private (Windows)
 

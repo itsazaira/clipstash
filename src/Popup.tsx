@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, isMac, Item, previewLines, shortcutLabel, Snapshot, timeAgo } from "./api";
+import { api, HISTORY_SIZES, isMac, Item, previewLines, shortcutLabel, Snapshot, timeAgo } from "./api";
+import About from "./About";
 import Logo from "./Logo";
 
-type View = "list" | "settings" | "permission";
+type View = "list" | "settings" | "permission" | "about";
 
 export default function Popup() {
-  const [snapshot, setSnapshot] = useState<Snapshot>({ items: [], paused: false });
+  const [snapshot, setSnapshot] = useState<Snapshot>({ items: [], paused: false, maxItems: 50 });
+  const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [view, setView] = useState<View>("list");
@@ -24,6 +26,7 @@ export default function Popup() {
       setSelected(0);
       setView("list");
       setConfirmClear(false);
+      setToast("");
       setNow(Date.now());
       requestAnimationFrame(() => searchRef.current?.focus());
     });
@@ -44,9 +47,19 @@ export default function Popup() {
     listRef.current?.querySelector<HTMLElement>(`[data-index="${selected}"]`)?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
+  useEffect(() => setToast(""), [view]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 2500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const pick = useCallback(async (item: Item) => {
     const result = await api.paste(item.id);
     if (result === "needs-permission") setView("permission");
+    // Opened from the tray or taskbar: there is no app to paste into, so it is copied instead.
+    if (result === "copied") setToast(`Copied. Press ${isMac ? "⌘ V" : "Ctrl V"} to paste it anywhere.`);
   }, []);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -72,12 +85,17 @@ export default function Popup() {
 
   return (
     <div className="popup" onKeyDown={onKeyDown}>
-      <header className="popup-header">
-        <div className="brand">
+      {/* Drag the header to move the window. Every element needs the attribute, not just the parent. */}
+      <header className="popup-header" data-tauri-drag-region>
+        <div className="brand" data-tauri-drag-region>
           <Logo size={26} />
-          <div>
-            <div className="brand-name">ClipStash</div>
-            <div className="brand-by">by Its Azaira</div>
+          <div data-tauri-drag-region>
+            <div className="brand-name" data-tauri-drag-region>
+              ClipStash
+            </div>
+            <div className="brand-by" data-tauri-drag-region>
+              by Its Azaira
+            </div>
           </div>
         </div>
         <button
@@ -181,13 +199,34 @@ export default function Popup() {
         </>
       )}
 
-      {view === "settings" && <Settings onBack={() => setView("list")} />}
+      {view === "settings" && (
+        <Settings maxItems={snapshot.maxItems} onAbout={() => setView("about")} onBack={() => setView("list")} />
+      )}
       {view === "permission" && <Permission onDone={() => setView("list")} />}
+      {view === "about" && <About onBack={() => setView("list")} />}
+
+      {view !== "about" && (
+        <div className="support-bar">
+          <button className="support-btn" onClick={() => setView("about")}>
+            <HeartIcon /> Support us
+          </button>
+          <span aria-hidden="true">·</span>
+          <button className="text-link" onClick={() => setView("about")}>
+            About us
+          </button>
+        </div>
+      )}
+
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
 
-function Settings({ onBack }: { onBack: () => void }) {
+function Settings({ maxItems, onAbout, onBack }: { maxItems: number; onAbout: () => void; onBack: () => void }) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -216,13 +255,32 @@ function Settings({ onBack }: { onBack: () => void }) {
       </label>
       <div className="row static">
         <span>
+          Keep my last
+          <small>Older copies are removed. Pinned items are always kept.</small>
+        </span>
+        <div className="segmented" role="radiogroup" aria-label="How many copies to keep">
+          {HISTORY_SIZES.map((size) => (
+            <button
+              key={size}
+              role="radio"
+              aria-checked={size === maxItems}
+              className={size === maxItems ? "on" : ""}
+              onClick={() => api.setMaxItems(size)}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="row static">
+        <span>
           Shortcut
           <small>Opens and closes ClipStash from any app.</small>
         </span>
         <kbd>{shortcutLabel}</kbd>
       </div>
       <div className="panel-actions">
-        <button className="text-btn" onClick={() => api.openAbout()}>
+        <button className="text-btn" onClick={onAbout}>
           About ClipStash
         </button>
         <button className="btn" onClick={onBack}>
@@ -292,6 +350,14 @@ function GearIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 21s-7.5-4.6-9.6-9.4C.9 8.2 3 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 3.6 0 5.7 3.7 4.2 7.1C19.5 16.4 12 21 12 21Z" />
     </svg>
   );
 }

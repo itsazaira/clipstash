@@ -5,8 +5,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Unpinned items kept. Pinned items do not count towards this limit.
-pub const MAX_ITEMS: usize = 50;
+/// How many unpinned items to keep. Pinned items do not count towards this limit.
+pub const HISTORY_SIZES: [usize; 4] = [10, 20, 50, 100];
+pub const DEFAULT_HISTORY_SIZE: usize = 50;
 
 /// Very large copies (whole files, logs) are skipped to keep the history file small.
 const MAX_TEXT_BYTES: usize = 1_000_000;
@@ -21,7 +22,7 @@ pub struct Item {
     pub pinned: bool,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Data {
     /// Newest first.
@@ -29,6 +30,13 @@ pub struct Data {
     pub paused: bool,
     pub next_id: u64,
     pub first_run_done: bool,
+    pub max_items: usize,
+}
+
+impl Default for Data {
+    fn default() -> Self {
+        Data { items: Vec::new(), paused: false, next_id: 0, first_run_done: false, max_items: DEFAULT_HISTORY_SIZE }
+    }
 }
 
 /// What the popup renders: pinned items on top, then newest first.
@@ -37,6 +45,7 @@ pub struct Data {
 pub struct Snapshot {
     pub items: Vec<Item>,
     pub paused: bool,
+    pub max_items: usize,
 }
 
 pub struct Store {
@@ -55,10 +64,13 @@ fn now_ms() -> i64 {
 
 impl Store {
     pub fn load(path: PathBuf) -> Self {
-        let data = fs::read_to_string(&path)
+        let mut data = fs::read_to_string(&path)
             .ok()
             .and_then(|s| serde_json::from_str::<Data>(&s).ok())
             .unwrap_or_default();
+        if !HISTORY_SIZES.contains(&data.max_items) {
+            data.max_items = DEFAULT_HISTORY_SIZE;
+        }
         Store { path, data, last_seen: String::new() }
     }
 
@@ -94,13 +106,14 @@ impl Store {
 
     /// Drops the oldest unpinned items beyond the limit.
     fn prune(&mut self) {
+        let max = self.data.max_items;
         let mut unpinned = 0;
         self.data.items.retain(|item| {
             if item.pinned {
                 return true;
             }
             unpinned += 1;
-            unpinned <= MAX_ITEMS
+            unpinned <= max
         });
     }
 
@@ -129,6 +142,17 @@ impl Store {
         self.save();
     }
 
+    /// Changes how many copies are kept. Going lower drops the oldest unpinned items now.
+    pub fn set_max_items(&mut self, max: usize) -> bool {
+        if !HISTORY_SIZES.contains(&max) {
+            return false;
+        }
+        self.data.max_items = max;
+        self.prune();
+        self.save();
+        true
+    }
+
     pub fn set_paused(&mut self, paused: bool) {
         self.data.paused = paused;
         self.save();
@@ -137,7 +161,7 @@ impl Store {
     pub fn snapshot(&self) -> Snapshot {
         let mut items: Vec<Item> = self.data.items.iter().filter(|i| i.pinned).cloned().collect();
         items.extend(self.data.items.iter().filter(|i| !i.pinned).cloned());
-        Snapshot { items, paused: self.data.paused }
+        Snapshot { items, paused: self.data.paused, max_items: self.data.max_items }
     }
 }
 
@@ -170,7 +194,10 @@ mod tests {
         for n in 0..60 {
             s.add(format!("item {n}"));
         }
-        assert_eq!(s.data.items.iter().filter(|i| !i.pinned).count(), MAX_ITEMS);
+        assert_eq!(s.data.items.iter().filter(|i| !i.pinned).count(), DEFAULT_HISTORY_SIZE);
+        assert!(s.set_max_items(10));
+        assert_eq!(s.data.items.iter().filter(|i| !i.pinned).count(), 10);
+        assert!(!s.set_max_items(7));
         assert_eq!(s.snapshot().items[0].text, "pinned");
         s.clear();
         assert_eq!(s.data.items.len(), 1);
