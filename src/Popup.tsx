@@ -4,7 +4,7 @@ import { api, HISTORY_SIZES, isMac, Item, previewLines, shortcutLabel, Snapshot,
 import About from "./About";
 import Logo from "./Logo";
 
-type View = "list" | "settings" | "permission" | "about";
+type View = "list" | "permission" | "about";
 
 export default function Popup() {
   const [snapshot, setSnapshot] = useState<Snapshot>({ items: [], paused: false, maxItems: 50 });
@@ -12,6 +12,7 @@ export default function Popup() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [view, setView] = useState<View>("list");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [now, setNow] = useState(Date.now());
   const searchRef = useRef<HTMLInputElement>(null);
@@ -25,6 +26,7 @@ export default function Popup() {
       setQuery("");
       setSelected(0);
       setView("list");
+      setSettingsOpen(false);
       setConfirmClear(false);
       setToast("");
       setNow(Date.now());
@@ -78,7 +80,8 @@ export default function Popup() {
       pick(items[selected]);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      if (query) setQuery("");
+      if (settingsOpen) setSettingsOpen(false);
+      else if (query) setQuery("");
       else api.hidePopup();
     }
   };
@@ -98,11 +101,16 @@ export default function Popup() {
             </div>
           </div>
         </div>
+        {/* Opens and closes the settings pane above the list. */}
         <button
-          className={`icon-btn ${view === "settings" ? "active" : ""}`}
-          title="Settings"
+          className={`icon-btn ${settingsOpen && view === "list" ? "active" : ""}`}
+          title={settingsOpen ? "Hide settings" : "Settings"}
           aria-label="Settings"
-          onClick={() => setView(view === "settings" ? "list" : "settings")}
+          aria-expanded={settingsOpen && view === "list"}
+          onClick={() => {
+            setSettingsOpen(view !== "list" || !settingsOpen);
+            setView("list");
+          }}
         >
           <GearIcon />
         </button>
@@ -110,6 +118,8 @@ export default function Popup() {
 
       {view === "list" && (
         <>
+          {settingsOpen && <Settings maxItems={snapshot.maxItems} />}
+
           <div className="search">
             <SearchIcon />
             <input
@@ -199,9 +209,6 @@ export default function Popup() {
         </>
       )}
 
-      {view === "settings" && (
-        <Settings maxItems={snapshot.maxItems} onAbout={() => setView("about")} onBack={() => setView("list")} />
-      )}
       {view === "permission" && <Permission onDone={() => setView("list")} />}
       {view === "about" && <About onBack={() => setView("list")} />}
 
@@ -209,10 +216,6 @@ export default function Popup() {
         <div className="support-bar">
           <button className="support-btn" onClick={() => setView("about")}>
             <HeartIcon /> Support us
-          </button>
-          <span aria-hidden="true">·</span>
-          <button className="text-link" onClick={() => setView("about")}>
-            About us
           </button>
         </div>
       )}
@@ -226,7 +229,8 @@ export default function Popup() {
   );
 }
 
-function Settings({ maxItems, onAbout, onBack }: { maxItems: number; onAbout: () => void; onBack: () => void }) {
+/** Settings pane at the top of the popup, opened and closed with the gear button. */
+function Settings({ maxItems }: { maxItems: number }) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -243,8 +247,7 @@ function Settings({ maxItems, onAbout, onBack }: { maxItems: number; onAbout: ()
   };
 
   return (
-    <div className="panel">
-      <h2>Settings</h2>
+    <div className="settings-pane">
       <label className="toggle row">
         <span>
           Start when my computer starts
@@ -278,14 +281,6 @@ function Settings({ maxItems, onAbout, onBack }: { maxItems: number; onAbout: ()
           <small>Opens and closes ClipStash from any app.</small>
         </span>
         <kbd>{shortcutLabel}</kbd>
-      </div>
-      <div className="panel-actions">
-        <button className="text-btn" onClick={onAbout}>
-          About ClipStash
-        </button>
-        <button className="btn" onClick={onBack}>
-          Done
-        </button>
       </div>
     </div>
   );

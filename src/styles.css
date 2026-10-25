@@ -177,6 +177,13 @@ kbd {
 .segmented button:hover { color: var(--text); background: var(--surface-2); }
 .segmented button.on { background: var(--gold); color: var(--on-gold); font-weight: 650; }
 
+/* Settings pane above the list */
+.settings-pane {
+  display: grid; gap: 6px; margin: 0 12px 8px; padding: 8px;
+  border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border);
+}
+.settings-pane .row { padding: 8px 10px; border-radius: 8px; }
+
 /* Support line under the footer */
 .support-bar {
   display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -188,8 +195,6 @@ kbd {
   padding: 3px 10px; color: var(--gold); font-size: 12px; font-weight: 600;
 }
 .support-btn:hover { border-color: var(--gold); }
-.text-link { background: none; border: none; padding: 3px 4px; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
-.text-link:hover { color: var(--text); }
 
 /* "Copied" message */
 .toast {
