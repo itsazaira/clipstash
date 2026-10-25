@@ -1,4 +1,4 @@
-/* Its Azaira palette. System fonts only: the app makes no network calls. */
+/* Its Azaira palette. Manrope is bundled with the app: no network calls. */
 :root {
   --bg: #0a0a0a;
   --surface: #151515;
@@ -10,13 +10,13 @@
   --gold-strong: #f0cd7a;
   --on-gold: #0a0a0a;
   --danger: #f08a7a;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --font: "Manrope Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   color-scheme: dark;
 }
 
+/* Light colours: from the system unless the user picked Dark, or when they picked Light. */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --bg: #fbf7ef;
     --surface: #ffffff;
     --surface-2: #f3ecdd;
@@ -31,6 +31,20 @@
   }
 }
 
+:root[data-theme="light"] {
+  --bg: #fbf7ef;
+  --surface: #ffffff;
+  --surface-2: #f3ecdd;
+  --border: #e6dcc6;
+  --text: #141414;
+  --muted: #6b6b6b;
+  --gold: #a8781f;
+  --gold-strong: #8a6115;
+  --on-gold: #ffffff;
+  --danger: #b3412e;
+  color-scheme: light;
+}
+
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; margin: 0; }
@@ -38,8 +52,9 @@ html, body, #root { height: 100%; margin: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.4 var(--font);
+  font: 500 13px/1.45 var(--font);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   user-select: none;
   overflow: hidden;
 }
@@ -102,9 +117,9 @@ kbd {
   border-left: 2px solid transparent;
 }
 .item.selected { background: var(--surface-2); border-left-color: var(--gold); }
-.item-text { flex: 1; min-width: 0; font-family: var(--mono); font-size: 12.5px; }
+.item-text { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
 .line { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
-.line + .line { color: var(--muted); }
+.line + .line { color: var(--muted); font-weight: 500; }
 .item-meta { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .time { font-size: 11px; color: var(--muted); white-space: nowrap; }
 

@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { api, HISTORY_SIZES, isMac, Item, previewLines, shortcutLabel, Snapshot, timeAgo } from "./api";
 import About from "./About";
 import Logo from "./Logo";
+import { applyTheme, loadTheme, Theme, THEMES } from "./theme";
 
 type View = "list" | "permission" | "about";
 
@@ -232,6 +233,12 @@ export default function Popup() {
 /** Settings pane at the top of the popup, opened and closed with the gear button. */
 function Settings({ maxItems }: { maxItems: number }) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
+  const [theme, setTheme] = useState<Theme>(loadTheme);
+
+  const changeTheme = (next: Theme) => {
+    setTheme(next);
+    applyTheme(next);
+  };
 
   useEffect(() => {
     api.getAutostart().then(setAutostart);
@@ -256,6 +263,22 @@ function Settings({ maxItems }: { maxItems: number }) {
         <input type="checkbox" checked={!!autostart} disabled={autostart === null} onChange={(e) => change(e.target.checked)} />
         <span className="switch" />
       </label>
+      <div className="row static">
+        <span>Appearance</span>
+        <div className="segmented" role="radiogroup" aria-label="Appearance">
+          {THEMES.map((t) => (
+            <button
+              key={t.value}
+              role="radio"
+              aria-checked={t.value === theme}
+              className={t.value === theme ? "on" : ""}
+              onClick={() => changeTheme(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="row static">
         <span>
           Keep my last

@@ -49,6 +49,7 @@ ClipStash is free and not code signed yet, so your computer shows a warning the 
 - Click an item (or use the arrow keys and Enter) and it pastes into the app you were just using. Opened from the tray or taskbar, a click copies the item so you can paste it anywhere
 - Pin an item so it is always kept, unpin any time
 - Pause recording, and Clear all (pinned items are kept)
+- Light, dark or follow your system
 - Lives in the system tray or menu bar, with Open, Pause and Quit. Shows on the taskbar while open, and you can drag it anywhere
 - Starts automatically when your computer starts (on by default, change it in Settings)
 - Skips copies that apps like password managers mark as private (Windows)
