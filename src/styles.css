@@ -198,6 +198,12 @@ kbd {
   border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border);
 }
 .settings-pane .row { padding: 8px 10px; border-radius: 8px; }
+.fold-hint {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  background: none; border: none; border-radius: 6px; padding: 4px; color: var(--muted); font-size: 11.5px;
+}
+.fold-hint:hover { color: var(--text); background: var(--surface); }
+.fold-hint svg { flex-shrink: 0; }
 
 /* Support line under the footer */
 .support-bar {

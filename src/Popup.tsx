@@ -119,7 +119,21 @@ export default function Popup() {
 
       {view === "list" && (
         <>
-          {settingsOpen && <Settings maxItems={snapshot.maxItems} />}
+          {settingsOpen && (
+            <Settings
+              maxItems={snapshot.maxItems}
+              onMaxItems={async (max) => {
+                // Show the choice straight away; if saving fails, fall back to what was saved.
+                setSnapshot((s) => ({ ...s, maxItems: max }));
+                try {
+                  await api.setMaxItems(max);
+                } catch {
+                  setSnapshot(await api.getState());
+                }
+              }}
+              onHide={() => setSettingsOpen(false)}
+            />
+          )}
 
           <div className="search">
             <SearchIcon />
@@ -231,7 +245,15 @@ export default function Popup() {
 }
 
 /** Settings pane at the top of the popup, opened and closed with the gear button. */
-function Settings({ maxItems }: { maxItems: number }) {
+function Settings({
+  maxItems,
+  onMaxItems,
+  onHide,
+}: {
+  maxItems: number;
+  onMaxItems: (max: number) => void;
+  onHide: () => void;
+}) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<Theme>(loadTheme);
 
@@ -291,7 +313,7 @@ function Settings({ maxItems }: { maxItems: number }) {
               role="radio"
               aria-checked={size === maxItems}
               className={size === maxItems ? "on" : ""}
-              onClick={() => api.setMaxItems(size)}
+              onClick={() => onMaxItems(size)}
             >
               {size}
             </button>
@@ -305,7 +327,18 @@ function Settings({ maxItems }: { maxItems: number }) {
         </span>
         <kbd>{shortcutLabel}</kbd>
       </div>
+      <button className="fold-hint" onClick={onHide}>
+        <ChevronUpIcon /> Hide settings. Open them again with the <GearIcon size={13} /> button.
+      </button>
     </div>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="m18 15-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -363,9 +396,9 @@ function SearchIcon() {
   );
 }
 
-function GearIcon() {
+function GearIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
     </svg>
