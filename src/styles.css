@@ -179,10 +179,11 @@ kbd {
 .muted { color: var(--muted) !important; font-size: 12px; }
 .warn { color: var(--gold) !important; font-size: 12px; }
 
-/* Drag the window by its header; clicks on the logo fall through to the header. */
-.popup-header { cursor: default; }
+/* Drag the window by its header. */
+.popup-header { cursor: grab; }
+.popup-header:active { cursor: grabbing; }
+.popup-header button { cursor: pointer; }
 .header-actions { display: flex; gap: 2px; }
-.brand svg { pointer-events: none; }
 
 /* History size picker */
 .segmented { display: flex; flex-shrink: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }

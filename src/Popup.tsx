@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { api, HISTORY_SIZES, isMac, Item, previewLines, shortcutLabel, Snapshot, timeAgo } from "./api";
 import About from "./About";
 import Logo from "./Logo";
@@ -89,17 +90,21 @@ export default function Popup() {
 
   return (
     <div className="popup" onKeyDown={onKeyDown}>
-      {/* Drag the header to move the window. Every element needs the attribute, not just the parent. */}
-      <header className="popup-header" data-tauri-drag-region>
-        <div className="brand" data-tauri-drag-region>
+      {/* Press and drag anywhere on the header, except its buttons, to move the window. */}
+      <header
+        className="popup-header"
+        onMouseDown={(e) => {
+          if (e.button === 0 && !(e.target as Element).closest("button")) {
+            e.preventDefault();
+            getCurrentWindow().startDragging();
+          }
+        }}
+      >
+        <div className="brand">
           <Logo size={26} />
-          <div data-tauri-drag-region>
-            <div className="brand-name" data-tauri-drag-region>
-              ClipStash
-            </div>
-            <div className="brand-by" data-tauri-drag-region>
-              by Its Azaira
-            </div>
+          <div>
+            <div className="brand-name">ClipStash</div>
+            <div className="brand-by">by Its Azaira</div>
           </div>
         </div>
         <div className="header-actions">
