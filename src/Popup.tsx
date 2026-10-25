@@ -102,19 +102,24 @@ export default function Popup() {
             </div>
           </div>
         </div>
-        {/* Opens and closes the settings pane above the list. */}
-        <button
-          className={`icon-btn ${settingsOpen && view === "list" ? "active" : ""}`}
-          title={settingsOpen ? "Hide settings" : "Settings"}
-          aria-label="Settings"
-          aria-expanded={settingsOpen && view === "list"}
-          onClick={() => {
-            setSettingsOpen(view !== "list" || !settingsOpen);
-            setView("list");
-          }}
-        >
-          <GearIcon />
-        </button>
+        <div className="header-actions">
+          {/* Opens and closes the settings pane above the list. */}
+          <button
+            className={`icon-btn ${settingsOpen && view === "list" ? "active" : ""}`}
+            title={settingsOpen ? "Hide settings" : "Settings"}
+            aria-label="Settings"
+            aria-expanded={settingsOpen && view === "list"}
+            onClick={() => {
+              setSettingsOpen(view !== "list" || !settingsOpen);
+              setView("list");
+            }}
+          >
+            <GearIcon />
+          </button>
+          <button className="icon-btn" title="Close" aria-label="Close ClipStash" onClick={() => api.hidePopup()}>
+            <CloseIcon />
+          </button>
+        </div>
       </header>
 
       {view === "list" && (
@@ -331,6 +336,14 @@ function Settings({
         <ChevronUpIcon /> Hide settings. Open them again with the <GearIcon size={13} /> button.
       </button>
     </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+    </svg>
   );
 }
 

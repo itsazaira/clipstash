@@ -66,12 +66,13 @@ fn hide_popup_window(app: &AppHandle) {
     }
 }
 
+/// The shortcut closes the popup when it is open and in front; otherwise it brings it forward.
 fn toggle_popup(app: &AppHandle, from_shortcut: bool) {
-    let visible = app
+    let in_front = app
         .get_webview_window(POPUP)
-        .and_then(|w| w.is_visible().ok())
+        .map(|w| w.is_visible().unwrap_or(false) && w.is_focused().unwrap_or(false))
         .unwrap_or(false);
-    if visible {
+    if in_front {
         hide_popup_window(app);
     } else {
         show_popup(app, from_shortcut);
@@ -276,16 +277,10 @@ pub fn run() {
             if window.label() != POPUP {
                 return;
             }
-            match event {
-                // Clicking anywhere else closes the popup.
-                WindowEvent::Focused(false) => {
-                    let _ = window.hide();
-                }
-                WindowEvent::CloseRequested { api, .. } => {
-                    api.prevent_close();
-                    let _ = window.hide();
-                }
-                _ => {}
+            // The popup stays open until the user closes it; closing only hides it to the tray.
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
             }
         })
         .invoke_handler(tauri::generate_handler![

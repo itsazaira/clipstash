@@ -181,6 +181,7 @@ kbd {
 
 /* Drag the window by its header; clicks on the logo fall through to the header. */
 .popup-header { cursor: default; }
+.header-actions { display: flex; gap: 2px; }
 .brand svg { pointer-events: none; }
 
 /* History size picker */
