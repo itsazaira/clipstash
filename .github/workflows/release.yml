@@ -1,0 +1,102 @@
+name: Release
+
+# Push a tag like v1.0.0 to build both installers and publish a GitHub Release.
+# Run it by hand (Actions tab, "Run workflow") to test the builds without publishing.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            runner: windows-latest
+            args: --bundles nsis
+            rust-targets: ""
+          - name: Mac
+            runner: macos-latest
+            args: --target universal-apple-darwin --bundles dmg
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The tag is the single source of truth for the version (v1.2.3 -> 1.2.3).
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+
+      - name: Build
+        run: npm run tauri build -- ${{ matrix.args }}
+
+      # After the build, so the frontend in dist/ exists for the Rust crate.
+      - name: Run tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      - name: Collect installer
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p out
+          if [ "${{ matrix.name }}" = "Windows" ]; then
+            cp src-tauri/target/release/bundle/nsis/*-setup.exe "out/ClipStash-${VERSION}-Windows-Setup.exe"
+          else
+            cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg "out/ClipStash-${VERSION}-Mac-Universal.dmg"
+          fi
+          ls -lh out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clipstash-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ClipStash ${{ github.ref_name }}
+          files: out/*
+          body: |
+            **ClipStash ${{ github.ref_name }}**, your last 50 copies, one shortcut away. Free forever, open source, MIT licence.
+
+            **Windows:** download `ClipStash-…-Windows-Setup.exe` and run it. If Windows SmartScreen appears, click **More info**, then **Run anyway**.
+
+            **Mac (Intel and Apple silicon):** download `ClipStash-…-Mac-Universal.dmg`, open it and drag ClipStash to Applications. The first time, **right click** the app and choose **Open**. On macOS 15 or later, if it is still blocked, go to System Settings → Privacy & Security and click **Open Anyway**.
+
+            Everything stays on your device.

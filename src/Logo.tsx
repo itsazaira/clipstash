@@ -1,0 +1,14 @@
+/** The ClipStash app icon (same artwork as src-tauri/icons/source/icon.svg). */
+export default function Logo({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 1024 1024" aria-hidden="true">
+      <rect width="1024" height="1024" rx="228" fill="#0A0A0A" />
+      <rect x="4.5" y="4.5" width="1015" height="1015" rx="223.5" fill="none" stroke="#FFFFFF" strokeOpacity="0.28" strokeWidth="9" />
+      <g transform="translate(0 -6)">
+        <rect x="297" y="262" width="430" height="548" rx="70" fill="none" stroke="#FFFFFF" strokeWidth="60" />
+        <rect x="397" y="192" width="230" height="128" rx="42" fill="#FFFFFF" />
+        <path d="M404 482 H620 M404 602 H548" stroke="#E2B95A" strokeWidth="58" strokeLinecap="round" fill="none" />
+      </g>
+    </svg>
+  );
+}
