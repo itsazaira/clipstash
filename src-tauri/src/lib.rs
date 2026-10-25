@@ -52,6 +52,7 @@ fn show_popup(app: &AppHandle, from_shortcut: bool) {
     PASTE_TARGET.store(from_shortcut, Ordering::SeqCst);
     #[cfg(target_os = "macos")]
     let _ = app.show();
+    let _ = window.unminimize();
     if !POSITIONED.swap(true, Ordering::SeqCst) {
         let _ = window.center();
     }

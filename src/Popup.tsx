@@ -17,6 +17,7 @@ export default function Popup() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [maximized, setMaximized] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -34,9 +35,15 @@ export default function Popup() {
       setNow(Date.now());
       requestAnimationFrame(() => searchRef.current?.focus());
     });
+    // Keep the maximize button icon in step with the window, however it was resized.
+    const win = getCurrentWindow();
+    const syncMaximized = () => win.isMaximized().then(setMaximized);
+    syncMaximized();
+    const unResized = win.onResized(syncMaximized);
     return () => {
       unState.then((f) => f());
       unShown.then((f) => f());
+      unResized.then((f) => f());
     };
   }, []);
 
@@ -90,14 +97,14 @@ export default function Popup() {
 
   return (
     <div className="popup" onKeyDown={onKeyDown}>
-      {/* Press and drag anywhere on the header, except its buttons, to move the window. */}
+      {/* Drag the header, except its buttons, to move the window; double-click it to maximize or restore. */}
       <header
         className="popup-header"
         onMouseDown={(e) => {
-          if (e.button === 0 && !(e.target as Element).closest("button")) {
-            e.preventDefault();
-            getCurrentWindow().startDragging();
-          }
+          if (e.button !== 0 || (e.target as Element).closest("button")) return;
+          e.preventDefault();
+          if (e.detail === 2) getCurrentWindow().toggleMaximize();
+          else getCurrentWindow().startDragging();
         }}
       >
         <div className="brand">
@@ -121,7 +128,19 @@ export default function Popup() {
           >
             <GearIcon />
           </button>
-          <button className="icon-btn" title="Close" aria-label="Close ClipStash" onClick={() => api.hidePopup()}>
+          <span className="divider" aria-hidden="true" />
+          <button className="icon-btn win-btn" title="Minimize" aria-label="Minimize" onClick={() => getCurrentWindow().minimize()}>
+            <MinimizeIcon />
+          </button>
+          <button
+            className="icon-btn win-btn"
+            title={maximized ? "Restore" : "Maximize"}
+            aria-label={maximized ? "Restore" : "Maximize"}
+            onClick={() => getCurrentWindow().toggleMaximize()}
+          >
+            {maximized ? <RestoreIcon /> : <MaximizeIcon />}
+          </button>
+          <button className="icon-btn win-btn close" title="Close to tray" aria-label="Close ClipStash" onClick={() => api.hidePopup()}>
             <CloseIcon />
           </button>
         </div>
@@ -344,10 +363,36 @@ function Settings({
   );
 }
 
+/* Window control icons: thin 12px strokes, the same weight for all three. */
+function MinimizeIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M1.5 6h9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function MaximizeIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <rect x="1.5" y="1.5" width="9" height="9" rx="2" />
+    </svg>
+  );
+}
+
+function RestoreIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <rect x="1.5" y="3.5" width="7" height="7" rx="1.5" />
+      <path d="M4 3.5V3a1.5 1.5 0 0 1 1.5-1.5h4A1.5 1.5 0 0 1 11 3v4a1.5 1.5 0 0 1-1.5 1.5H9" />
+    </svg>
+  );
+}
+
 function CloseIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+      <path d="M2 2l8 8M10 2 2 10" strokeLinecap="round" />
     </svg>
   );
 }

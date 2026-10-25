@@ -183,7 +183,10 @@ kbd {
 .popup-header { cursor: grab; }
 .popup-header:active { cursor: grabbing; }
 .popup-header button { cursor: pointer; }
-.header-actions { display: flex; gap: 2px; }
+.header-actions { display: flex; align-items: center; gap: 2px; }
+.header-actions .divider { width: 1px; height: 18px; margin: 0 4px; background: var(--border); }
+.win-btn { width: 32px; height: 28px; border-radius: 7px; }
+.win-btn.close:hover { background: #c42b1c; color: #fff; }
 
 /* History size picker */
 .segmented { display: flex; flex-shrink: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
