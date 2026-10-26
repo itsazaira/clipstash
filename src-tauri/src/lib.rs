@@ -19,6 +19,10 @@ use tauri_plugin_opener::OpenerExt;
 
 const POPUP: &str = "popup";
 
+/// Added to the start-at-login command, so a login start stays quietly in the tray
+/// while opening ClipStash by hand shows its window.
+const AUTOSTART_ARG: &str = "--autostart";
+
 /// True when the popup was opened with the shortcut, so a pick pastes into the app the user was in.
 /// Opened from the tray, taskbar or a second launch, there is no such app and a pick only copies.
 static PASTE_TARGET: AtomicBool = AtomicBool::new(false);
@@ -254,7 +258,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         // Launching ClipStash again just opens the popup of the running copy.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| show_popup(app, false)))
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec![AUTOSTART_ARG])))
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
@@ -275,11 +279,13 @@ pub fn run() {
             let paused = store.data.paused;
             app.manage(AppState { store: Mutex::new(store), pause_item: Mutex::new(None) });
 
-            // Start at login is on by default (skipped for dev builds).
+            // Start at login is on by default (skipped for dev builds). An existing entry is
+            // written again so login starts made by older versions also get AUTOSTART_ARG.
+            let autolaunch = app.autolaunch();
+            if !cfg!(debug_assertions) && (first_run || autolaunch.is_enabled().unwrap_or(false)) {
+                let _ = autolaunch.enable();
+            }
             if first_run {
-                if !cfg!(debug_assertions) {
-                    let _ = app.autolaunch().enable();
-                }
                 let state = app.state::<AppState>();
                 let mut store = state.store.lock().unwrap();
                 store.data.first_run_done = true;
@@ -291,6 +297,12 @@ pub fn run() {
                 eprintln!("ClipStash: could not register the shortcut: {e}");
             }
             watcher::start(app.handle().clone());
+
+            // Opened by hand (Start menu, Applications, Spotlight): show the window so it is clear
+            // ClipStash is running. Started at login: stay in the tray.
+            if !std::env::args().any(|arg| arg == AUTOSTART_ARG) {
+                show_popup(app.handle(), false);
+            }
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -320,12 +332,12 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building ClipStash");
 
-    app.run(|_app, event| {
+    app.run(|_app, event| match event {
         // Closing windows must not quit a tray app. Only Quit does.
-        if let RunEvent::ExitRequested { api, code, .. } = event {
-            if code.is_none() {
-                api.prevent_exit();
-            }
-        }
+        RunEvent::ExitRequested { api, code, .. } if code.is_none() => api.prevent_exit(),
+        // Opening ClipStash again from Finder or the Dock while it runs shows the window.
+        #[cfg(target_os = "macos")]
+        RunEvent::Reopen { .. } => show_popup(_app, false),
+        _ => {}
     });
 }

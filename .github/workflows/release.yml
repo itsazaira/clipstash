@@ -101,13 +101,14 @@ jobs:
             ### Windows 10 and 11
             1. Download `ClipStash-Windows-Setup.exe`. If your browser says it isn't commonly downloaded, choose **Keep**.
             2. Open it. Windows shows **"Windows protected your PC"**: click **More info**, then **Run anyway**.
-            3. ClipStash starts in the system tray. Press **Ctrl Shift V** to open it.
+            3. ClipStash opens and adds an icon to the system tray. Press **Ctrl Shift V** to open it any time.
 
             ### Mac (macOS 10.15 or later, Intel and Apple silicon)
             1. Download `ClipStash-Mac-Universal.dmg`, open it and drag ClipStash into **Applications**.
             2. Open ClipStash. macOS says **"Apple could not verify "ClipStash" is free of malware"**: click **Done** (not Move to Bin).
             3. Go to **System Settings → Privacy & Security**, scroll to **Security** and click **Open Anyway** next to "ClipStash" was blocked. Enter your password.
             4. Open ClipStash again and click **Open Anyway**. Done: it opens normally from now on.
+               ClipStash lives in the menu bar (no Dock icon). Press **Cmd Shift V** to open it any time.
             5. The first time you paste, allow ClipStash under **Privacy & Security → Accessibility**.
 
             On macOS 14 or earlier: right click ClipStash in Applications, choose **Open**, then **Open** again.

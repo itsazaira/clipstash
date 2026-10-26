@@ -35,7 +35,7 @@ No account, no internet, no tracking. A small download (under 5 MB).
    If your browser says it *isn't commonly downloaded*, choose **Keep** (in Edge: **…** → **Keep** → **Keep anyway**).
 2. Open the file. Windows shows **"Windows protected your PC"**.
 3. Click **More info**, then **Run anyway**. The installer runs in a few seconds.
-4. ClipStash starts in the system tray at the bottom right (you may need to click the **^** arrow to see it). Press **Ctrl Shift V** to open it.
+4. ClipStash opens its window and adds an icon to the system tray at the bottom right (you may need to click the **^** arrow to see it). From then on, press **Ctrl Shift V** to open it.
 
 ### Mac (macOS 10.15 or later, Intel and Apple silicon)
 
@@ -46,7 +46,8 @@ No account, no internet, no tracking. A small download (under 5 MB).
    Click **Open Anyway** and enter your Mac password.
    *(This button appears for about an hour after step 2. If you do not see it, open ClipStash once more, then come back.)*
 4. Open ClipStash again and click **Open Anyway** in the box that appears. It now opens normally from then on.
-5. ClipStash appears in the menu bar at the top of the screen. Press **Cmd Shift V** to open it.
+5. ClipStash opens its window and adds a clipboard icon to the menu bar at the top right. It has no Dock icon. From then on, press **Cmd Shift V** or click the menu bar icon to open it.
+   *(On a MacBook with a notch and a full menu bar, the icon can be hidden behind the notch. The shortcut still works.)*
 6. The first time you pick an item, ClipStash asks for **Accessibility** access so it can press Cmd V for you. Follow the short screen it shows: **System Settings → Privacy & Security → Accessibility**, turn on **ClipStash**. Until then, your item is still copied, so you can press Cmd V yourself.
 
 On macOS 14 (Sonoma) or earlier, steps 2 to 4 are simpler: **right click** ClipStash in Applications, choose **Open**, then **Open** again.
