@@ -27,25 +27,45 @@ No account, no internet, no tracking. A small download (under 5 MB).
 
 ## Install
 
-ClipStash is free and not code signed yet, so your computer shows a warning the first time. That is expected.
+> **A security warning the first time is expected.** ClipStash is free and not code signed yet, so Windows and macOS do not recognise it. You only need the steps below once per computer; after that it opens normally. The code is all here to read.
 
 ### Windows 10 and 11
 
-1. Download [`ClipStash-Windows-Setup.exe`](https://github.com/itsazaira/clipstash/releases/latest/download/ClipStash-Windows-Setup.exe) and open it.
-2. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
-3. ClipStash starts in the system tray (bottom right; you may need to click the ^ arrow).
+1. Download [`ClipStash-Windows-Setup.exe`](https://github.com/itsazaira/clipstash/releases/latest/download/ClipStash-Windows-Setup.exe).
+   If your browser says it *isn't commonly downloaded*, choose **Keep** (in Edge: **…** → **Keep** → **Keep anyway**).
+2. Open the file. Windows shows **"Windows protected your PC"**.
+3. Click **More info**, then **Run anyway**. The installer runs in a few seconds.
+4. ClipStash starts in the system tray at the bottom right (you may need to click the **^** arrow to see it). Press **Ctrl Shift V** to open it.
 
 ### Mac (macOS 10.15 or later, Intel and Apple silicon)
 
 1. Download [`ClipStash-Mac-Universal.dmg`](https://github.com/itsazaira/clipstash/releases/latest/download/ClipStash-Mac-Universal.dmg), open it and drag **ClipStash** into **Applications**.
-2. The first time, **right click** ClipStash in Applications and choose **Open**, then **Open** again.
-   On macOS 15 (Sequoia) or later, if it is still blocked: open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-3. ClipStash appears in the menu bar at the top of the screen.
-4. The first time you pick an item, ClipStash asks for **Accessibility** access so it can press Cmd V for you. Follow the short screen it shows. Until then, your item is still copied, so you can press Cmd V yourself.
+2. Open ClipStash from Applications. macOS shows **"Apple could not verify "ClipStash" is free of malware…"** with only **Done** and **Move to Bin**.
+   Click **Done**. Do not click Move to Bin.
+3. Open **System Settings → Privacy & Security** and scroll down to **Security**. You will see **"ClipStash" was blocked to protect your Mac**.
+   Click **Open Anyway** and enter your Mac password.
+   *(This button appears for about an hour after step 2. If you do not see it, open ClipStash once more, then come back.)*
+4. Open ClipStash again and click **Open Anyway** in the box that appears. It now opens normally from then on.
+5. ClipStash appears in the menu bar at the top of the screen. Press **Cmd Shift V** to open it.
+6. The first time you pick an item, ClipStash asks for **Accessibility** access so it can press Cmd V for you. Follow the short screen it shows: **System Settings → Privacy & Security → Accessibility**, turn on **ClipStash**. Until then, your item is still copied, so you can press Cmd V yourself.
+
+On macOS 14 (Sonoma) or earlier, steps 2 to 4 are simpler: **right click** ClipStash in Applications, choose **Open**, then **Open** again.
+
+<details>
+<summary>Prefer Terminal on Mac? One line instead of steps 2 to 4</summary>
+
+After dragging ClipStash into Applications, run this once. It removes the "downloaded from the internet" flag so macOS opens ClipStash normally:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/ClipStash.app
+```
+</details>
 
 ### Updating
 
 Download the latest installer and run it over your current version. From version 1.1.3 on, your history is kept when you update.
+
+Because each new download is a new unsigned file, you will see the same first-time warning again after updating. Follow the same steps as above: **More info → Run anyway** on Windows, and **Done → Privacy & Security → Open Anyway** on Mac.
 
 ## How to use it
 
