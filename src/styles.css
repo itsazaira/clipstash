@@ -238,8 +238,8 @@ kbd {
 .back-btn:hover { color: var(--text); }
 .about-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; user-select: text; }
 .about h1 { margin: 10px 0 2px; font-size: 22px; letter-spacing: 0.01em; }
-.tagline { margin: 0; color: var(--text); font-size: 13.5px; }
-.version { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.panel .tagline { margin: 0; color: var(--text); font-size: 13.5px; }
+.panel .version { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 .maker { margin: 16px 0 14px; padding-top: 14px; border-top: 1px solid var(--border); width: 100%; }
 .maker-name { color: var(--gold); font-weight: 600; }
 .maker-tagline { color: var(--muted); font-size: 12px; margin-top: 2px; font-style: italic; }
@@ -249,4 +249,4 @@ kbd {
   padding: 5px 12px; font-size: 12.5px;
 }
 .link:hover { border-color: var(--gold); color: var(--gold); }
-.licence { margin: 16px 0 0; color: var(--muted); font-size: 12px; }
+.panel .licence { margin: 16px 0 0; color: var(--muted); font-size: 12px; }
