@@ -54,11 +54,15 @@ On macOS 14 (Sonoma) or earlier, steps 2 to 4 are simpler: **right click** ClipS
 <details>
 <summary>Prefer Terminal on Mac? One line instead of steps 2 to 4</summary>
 
-After dragging ClipStash into Applications, run this once. It removes the "downloaded from the internet" flag so macOS opens ClipStash normally:
+Drag ClipStash from the disk image to your **Desktop** (not Applications yet) and run this once. It removes the "downloaded from the internet" flag so macOS opens ClipStash normally:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/ClipStash.app
+xattr -dr com.apple.quarantine ~/Desktop/ClipStash.app
 ```
+
+Then move ClipStash from the Desktop into Applications.
+
+If ClipStash is already in Applications, running the command on `/Applications/ClipStash.app` gives **"Operation not permitted"** on macOS 13 and later. Either allow Terminal under **System Settings → Privacy & Security → App Management** (then quit and reopen Terminal), or use steps 2 to 4 instead.
 </details>
 
 ### Updating

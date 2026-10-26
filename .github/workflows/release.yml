@@ -111,7 +111,7 @@ jobs:
             5. The first time you paste, allow ClipStash under **Privacy & Security → Accessibility**.
 
             On macOS 14 or earlier: right click ClipStash in Applications, choose **Open**, then **Open** again.
-            Terminal alternative: `xattr -dr com.apple.quarantine /Applications/ClipStash.app`
+            Terminal alternative: drag ClipStash to your Desktop, run `xattr -dr com.apple.quarantine ~/Desktop/ClipStash.app`, then move it into Applications.
 
             Full guide: https://github.com/itsazaira/clipstash#install
 
