@@ -7,6 +7,7 @@ mod store;
 mod watcher;
 
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::path::PathBuf;
 use std::sync::Mutex;
 use store::{Snapshot, Store};
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
@@ -36,6 +37,24 @@ const LINKS: &[&str] = &[
 pub struct AppState {
     pub store: Mutex<Store>,
     pause_item: Mutex<Option<CheckMenuItem<Wry>>>,
+}
+
+/// History lives in its own "ClipStash" folder (%APPDATA%\ClipStash on Windows,
+/// ~/Library/Application Support/ClipStash on Mac), not in the app identifier folder:
+/// upgrading over an older version on Windows can delete the identifier folder.
+/// History saved there by earlier versions is copied over the first time.
+fn history_path(app: &AppHandle) -> tauri::Result<PathBuf> {
+    let path = app.path().data_dir()?.join("ClipStash").join("history.json");
+    if !path.exists() {
+        let old = app.path().app_data_dir()?.join("history.json");
+        if old.exists() {
+            if let Some(dir) = path.parent() {
+                let _ = std::fs::create_dir_all(dir);
+            }
+            let _ = std::fs::copy(&old, &path);
+        }
+    }
+    Ok(path)
 }
 
 /// Tells every window the history changed.
@@ -251,7 +270,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let store = Store::load(app.path().app_data_dir()?.join("history.json"));
+            let store = Store::load(history_path(app.handle())?);
             let first_run = !store.data.first_run_done;
             let paused = store.data.paused;
             app.manage(AppState { store: Mutex::new(store), pause_item: Mutex::new(None) });

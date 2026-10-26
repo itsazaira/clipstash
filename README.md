@@ -58,8 +58,10 @@ ClipStash is free and not code signed yet, so your computer shows a warning the 
 
 **Everything stays on your device.** ClipStash makes no network calls of any kind. There is no account, no server and no analytics. Your history is a single file in your app data folder:
 
-- Windows: `%APPDATA%\com.itsazaira.clipstash\history.json`
-- Mac: `~/Library/Application Support/com.itsazaira.clipstash/history.json`
+- Windows: `%APPDATA%\ClipStash\history.json`
+- Mac: `~/Library/Application Support/ClipStash/history.json`
+
+Updating ClipStash keeps your history. Uninstalling leaves this file in place; delete the folder if you want it gone.
 
 ## Build it yourself
 
